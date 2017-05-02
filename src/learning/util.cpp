@@ -183,11 +183,12 @@ inline bool canPut(int blockType, const Board& board)
 #define MOVEIN if(block.x >= 1 && block.x <= MAPWIDTH &&\
 	 block.y >= 1 && block.y <= MAPHEIGHT &&\
 	!valid[block.x][block.y][block.o]&&isValid(block, board))\
-	{valid[block.x][block.y][block.o] = true; validList.push(block);}
+	{valid[block.x][block.y][block.o] = true; validList[end++]=block;}
 
 inline vector<Block> allPossibleState(int blockType, const Board& board){
 	bool valid[MAPWIDTH+2][MAPHEIGHT+2][4]={};
-	queue<Block> validList;
+	Block validList[800];
+	int begin = 0, end = 0;
 	for (int y = MAPHEIGHT; y >= 1; y--)
 		for (int x = 1; x <= MAPWIDTH; x++)
 			for (int o = 0; o < 4; o++)
@@ -195,12 +196,11 @@ inline vector<Block> allPossibleState(int blockType, const Board& board){
 				Block block{blockType,x,y,o};
 				if (isValid(block, board) && checkDirectDropTo(block, board)){
 					valid[block.x][block.y][block.o]=true;
-					validList.push(block);
+					validList[end++]=block;
 				}
 			}
-	while(!validList.empty()){
-		Block block = validList.front();
-		validList.pop();
+	while(begin!=end){
+		Block block = validList[begin++];
 		block.y--;
 		MOVEIN
 		block.y++; block.x--;
