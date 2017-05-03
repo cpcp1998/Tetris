@@ -1,5 +1,7 @@
 #include<utility> 
 #include<algorithm>
+#include<cmath>
+#include<fstream>
 #define NDEBUG
 #include "util.cpp"
 #define PARAM_SIZE 12
@@ -39,13 +41,15 @@ Param generate(Param p, double sigma){
 	return p;
 }
 int main(){
-	double sigma = 2.0;
-	//int epoch = 100;
+	ofstream fout("out.txt");
+	double sigma = 0.5;
+	int epoch = 0;
 	int size = 100;
 	while(true){
-		cout<<"sigma="; cin>>sigma;
-		//cout<<"epoch="; cin>>epoch;
-		cout<<"size="; cin>>size;
+		//cout<<"sigma="; cin>>sigma;
+		//if(sigma == 0) break;
+		epoch++;
+		//cout<<"size="; cin>>size;
 		vector<pair<int,Param> > def(size),att(size);
 		for(int i=0;i<size;i++){
 			def[i].first=0;
@@ -58,28 +62,53 @@ int main(){
 		for(int i=0;i<size;++i){
 			cout<<"Calculating #"<<i<<endl;
 			for(int j=0;j<size;++j){
-				int ret = simulate(paramDefenser(def[i].second),paramAttacker(att[i].second),40);
+				int ret = simulate(paramDefenser(def[i].second),paramAttacker(att[j].second),40);
 				def[i].first+=ret;
-				att[i].first-=ret;
+				att[j].first-=ret;
 			}
 		}
 		sort(att.begin(),att.end());
 		sort(def.begin(),def.end());
 		int edge = size * 0.5;
+		double max = 0;
 		for(int i=0;i<PARAM_SIZE;i++){
 			double sum = 0;
 			for(int j=edge;j<size;j++)
 				sum+=def[j].second[i];
-			Defparam[i]=sum/(size-edge);
+			double newvalue = sum/(size-edge);
+			double diff = abs(newvalue - Defparam[i]);
+			if(diff>max) max = diff;
+			Defparam[i]=newvalue;
 		}
+		cout<<"Defenser change max: "<<max<<endl;
+		max = 0;
 		for(int i=0;i<PARAM_SIZE;i++){
 			double sum = 0;
 			for(int j=edge;j<size;j++)
 				sum+=att[j].second[i];
-			Attparam[i]=sum/(size-edge);
+			double newvalue = sum/(size-edge);
+			double diff = abs(newvalue - Attparam[i]);
+			if(diff>max) max = diff;
+			Attparam[i]=newvalue;
 		}
+		cout<<"Attacker change max: "<<max<<endl;
 		cout<<"Best attacker: "<<att[size-1].first/(double)size<<endl;
 		cout<<"Best defenser: "<<def[size-1].first/(double)size<<endl;
-		cout<<"Result against random"<<simulate(paramDefenser(Defparam),randomAttacker,30)<<endl;
+		cout<<"Result against random: "<<simulate(paramDefenser(Defparam),randomAttacker,30)<<endl;
+		cout<<"vs: "<<simulate(paramDefenser(Defparam),paramAttacker(Attparam),40)<<endl;
+		fout<<"//epoch: "<<epoch<<endl;
+		fout<<"//sigma: "<<sigma<<endl;
+		fout<<"//size: "<<size<<endl;
+		fout<<"Param Defparam = {"<<endl;
+		for(int i=0;i<PARAM_SIZE;++i) fout<<"  "<<Defparam[i]<<','<<endl;
+		fout<<"};"<<endl;
+		fout<<"//epoch: "<<epoch<<endl;
+		fout<<"//sigma: "<<sigma<<endl;
+		fout<<"//size: "<<size<<endl;
+		fout<<"Param Attparam = {"<<endl;
+		for(int i=0;i<PARAM_SIZE;++i) fout<<"  "<<Attparam[i]<<','<<endl;
+		fout<<"};"<<endl;
+		fout<<endl; 
 	}
+	fout.close();
 }
