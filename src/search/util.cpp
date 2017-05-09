@@ -40,11 +40,9 @@ struct Block{
 };
 
 struct Board{
-	bool grid[MAPHEIGHT + 2][MAPWIDTH + 2];
+	int grid[MAPHEIGHT + 2][MAPWIDTH + 2];
 	Board(int g[][MAPWIDTH + 2]){
-		for(int i=0;i<MAPHEIGHT+2;i++)
-			for(int j=0;j<MAPWIDTH+2;j++)
-				grid[i][j]=g[i][j];
+		memcpy(grid,g,sizeof grid);
 	}
 };
 
@@ -147,8 +145,8 @@ inline int eliminate(Board& board, int start = 1, int end = 20)
 	{
 		if (i > end) {
 			if (!count) return 0;
-			memmove(board.grid[i - count], board.grid[i],12*sizeof(bool)*(20-end) );
-			memset(board.grid[21 - count], 0, 12 * sizeof(bool)*count);
+			memmove(board.grid[i - count], board.grid[i],12*sizeof(int)*(20-end) );
+			memset(board.grid[21 - count], 0, 12 * sizeof(int)*count);
 			return count;
 		}
 		int emptyFlag = 1;
@@ -174,8 +172,8 @@ inline int eliminate(Board& board, int start = 1, int end = 20)
 			break;
 		}
 		else if(count){
-			memcpy(board.grid[i-count],board.grid[i],12*sizeof(bool));
-			memset(board.grid[i]+1,0,10*sizeof(bool));
+			memcpy(board.grid[i-count],board.grid[i],12*sizeof(int));
+			memset(board.grid[i]+1,0,10*sizeof(int));
 		}
 	}
 	return count;
@@ -269,12 +267,11 @@ typedef int* Altitude; // int[12]
 Altitude altitude(const Board& board, Altitude ret){
 	ret[0]=ret[MAPWIDTH+1]=MAPHEIGHT;
 	for(int x=1;x<=MAPWIDTH;x++){
-		ret[x]=0;
 		for(int y=MAPHEIGHT;y>=1;y--){
-			if(board.grid[y][x]){
-				ret[x]=y; break;
-			}
+			if(board.grid[y][x]) ret[x]=y;
+			break;
 		}
+		ret[x] = 0;
 	}
 	return ret;
 }
