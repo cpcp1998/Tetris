@@ -9,7 +9,7 @@
 // 坐标系：原点在左下角
 
 #define LANDHEIGHT -1.5
-
+#define SEARCH_SIZE 8
 #define ELIMINATION_REWARD (3.4181268101392694*2)
 
 #include <iostream>
@@ -22,6 +22,8 @@
 #include <vector>
 #include <queue>
 #include <cstring>
+#include <random>
+#include <bitset>
 #include <random>
 using namespace std;
 
@@ -71,6 +73,11 @@ static const int blockShape[7][4][8] = {
 #define MINVALUE -10000000
 #define MAXVALUE  10000000
 
+mt19937 engine(time(0));
+
+bool operator<(const Block& a,const Block& b){
+	return a.y<b.y;
+}
 
 extern double value(const Board& board, const int *blockCount);
 
@@ -93,7 +100,8 @@ double QS(const Block& block, const Board& board, int *blockCount){
 	}
 	for(int i = 0; i < 7; i++)
 		if(blockCount[i]<minCount+2) opChoice[ptoOC++] = i;
-	//TODO: shuffle opChoice
+	//shuffle opChoice
+	shuffle(opChoice,opChoice+ptoOC,engine);
 	double worst = MAXVALUE;
 	for(int i=0;i<ptoOC; i++){
 		double op = QO<depth-1>(opChoice[i], newboard, blockCount);
@@ -115,7 +123,16 @@ double QO(int blockType, const Board& board, int* blockCount){
 	blockCount[blockType]++;
 	Block moves[40];
 	int size = simpleMoves(blockType, board, moves);
-	//TODO: shuffle moves
+	//shuffle moves
+	shuffle(moves,moves+size,engine);
+#ifdef SEARCH_SIZE
+	if(depth>=0){
+		if(size>SEARCH_SIZE){
+			sort(moves,moves+size);
+			size = SEARCH_SIZE;
+		}	
+	} 
+#endif
 	double best = MINVALUE;
 	for (int i = 0; i < size;i++) {
 		double se = QS<depth>(moves[i], board, blockCount);
@@ -130,6 +147,27 @@ Block searchS(int blockType, const Board& board, int* blockCount){
 	Block moves[40];
 	int size = simpleMoves(blockType, board, moves);
 	if(size == 0) return searchS<-1>(blockType, board, blockCount);
+	shuffle(moves,moves+size,engine);
+#ifdef INIT_SEARCH_SIZE
+	if(depth>0){
+		if(size>SEARCH_SIZE){
+			double score[40];
+			for(int i=0;i<size;i++) score[i]=QS<depth>(moves[i],board,blockCount);
+			for(int i=0;i<SEARCH_SIZE;i++){
+				double best = MINVALUE; int index = i;
+				for(int j=i;j<size;j++){
+					if(score[j]>best){
+						best = score[j];
+						index = j;
+					}
+				}
+				swap(moves[i],moves[index]);
+				swap(score[i],score[index]);
+			}
+			size = SEARCH_SIZE;
+		}
+	}
+#endif
 	Block best; double max = MINVALUE;
 	for (int i = 0; i < size;i++) {
 		double se = QS<depth>(moves[i], board, blockCount);
@@ -548,8 +586,8 @@ int main()
 
 	Board myBoard(gridInfo[currBotColor]);
 	Board enemyBoard(gridInfo[enemyColor]);
-	Block ans = searchS<1>(nextTypeForColor[currBotColor],myBoard,typeCountForColor[currBotColor]);
-	blockForEnemy = searchO<1>(enemyBoard,typeCountForColor[enemyColor]);
+	Block ans = searchS<2>(nextTypeForColor[currBotColor],myBoard,typeCountForColor[currBotColor]);
+	blockForEnemy = searchO<2>(enemyBoard,typeCountForColor[enemyColor]);
 	finalX = ans.x;
 	finalY = ans.y;
 	finalO = ans.o;
