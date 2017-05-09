@@ -9,7 +9,7 @@
 // 坐标系：原点在左下角
 
 #define LANDHEIGHT -1.5
-#define SEARCH_SIZE 8
+#define SEARCH_SIZE 9
 #define ELIMINATION_REWARD (3.4181268101392694*2)
 
 #include <iostream>
@@ -25,6 +25,7 @@
 #include <random>
 #include <bitset>
 #include <random>
+#include <cmath>
 using namespace std;
 
 #define MAPWIDTH 10
@@ -68,7 +69,7 @@ static const int blockShape[7][4][8] = {
 
 #define NOT_STAND_ALONE_FIND
 
-#include "util.cpp"
+#include "util.cpp" 
 
 #define MINVALUE -10000000
 #define MAXVALUE  10000000

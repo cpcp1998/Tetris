@@ -418,7 +418,7 @@ double value(const Board& board, const int *blockCount){
 	int alti[12];
 	altitude(board, alti);
 	return
-			-40/(21-pileHeight(alti))
+			10*log(21-pileHeight(alti))
 			-3.2178882868487753*rowTransitions(board)
 			-9.348695305445199*colTransitions(board)
 			-7.899265427351652*numHoles(board)
